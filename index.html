@@ -1,0 +1,3380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Plataforma Blockchain para Trazabilidad de Residuos Electrónicos</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: #f0f0f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #142744;
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+  nav {
+    display: flex;
+    gap: 0.8rem;
+  }
+  nav button {
+    background: transparent;
+    border: 2px solid #36D1DC;
+    color: #36D1DC;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  nav button:hover, nav button.active {
+    background: #36D1DC;
+    color: #142744;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .user-info {
+    margin-left: 1.5rem;
+    color: #36D1DC;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+  }
+  .user-info .logout-btn {
+    margin-left: 1rem;
+    background: #e74c3c;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.35rem 1rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+  .user-info .logout-btn:hover { 
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  .user-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+  .user-info .user-icon {
+    margin-right: 0.4em;
+    font-size: 1.1em;
+    color: #8ed6fb;
+  }
+  main {
+    flex-grow: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+  }
+  section {
+    display: none;
+    animation: fadeIn 0.6s ease forwards;
+  }
+  section.active {
+    display: block;
+  }
+  h2 {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-left: 6px solid #36D1DC;
+    padding-left: 0.75rem;
+    font-size: 1.8rem;
+    color: #36D1DC;
+  }
+  /* Home Section Improvements */
+  .welcome-container {
+    background: rgba(31, 65, 108, 0.6);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+    text-align: center;
+  }
+  .welcome-title {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+    color: #36D1DC;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .welcome-subtitle {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    color: #b3d4fc;
+    line-height: 1.6;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .welcome-cta {
+    background: #36D1DC;
+    color: #142744;
+    font-weight: 700;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 1.5rem auto;
+    display: inline-block;
+  }
+  .welcome-cta:hover {
+    background: #28a0b0;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.8rem;
+    margin-top: 3rem;
+  }
+  .feature-card {
+    background: rgba(37, 56, 93, 0.7);
+    border-radius: 10px;
+    padding: 1.8rem;
+    border-top: 4px solid #36D1DC;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(54, 209, 220, 0.1);
+    text-align: center;
+  }
+  .feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    background: rgba(37, 56, 93, 0.9);
+  }
+  .feature-card h3 {
+    color: #36D1DC;
+    margin-top: 0;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+  .feature-card p {
+    color: #cfd8dc;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+  .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: #36D1DC;
+  }
+  .how-it-works {
+    background: rgba(31, 65, 108, 0.6);
+    padding: 2rem;
+    border-radius: 12px;
+    margin-top: 3rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+  .step {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    background: rgba(54, 209, 220, 0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #36D1DC;
+  }
+  .step-number {
+    background: #36D1DC;
+    color: #142744;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  .step h4 {
+    margin-top: 0;
+    color: #36D1DC;
+  }
+  .step p {
+    color: #b3d4fc;
+    line-height: 1.6;
+  }
+  /* Form Styles */
+  form {
+    background: #1f416c;
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    max-width: 700px;
+    margin: 0 auto;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  form label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #b3d4fc;
+  }
+  form input, form select, form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(54, 209, 220, 0.3);
+    font-size: 1rem;
+    background: rgba(56, 90, 155, 0.7);
+    color: #f0f0f0;
+    transition: all 0.3s ease;
+  }
+  form input:focus, form select:focus, form textarea:focus {
+    outline: none;
+    background: #2a4580;
+    border-color: #36D1DC;
+    box-shadow: 0 0 0 2px rgba(54, 209, 220, 0.2);
+  }
+  form textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  form button {
+    margin-top: 25px;
+    background: #36D1DC;
+    color: #142744;
+    font-weight: 700;
+    border: none;
+    padding: 0.85rem 1.75rem;
+    font-size: 1.05rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+  }
+  form button:hover {
+    background: #28a0b0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  /* Blockchain Visualization */
+  .chain-container {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: #36D1DC #142744;
+  }
+  .chain-container::-webkit-scrollbar {
+    height: 8px;
+  }
+  .chain-container::-webkit-scrollbar-track {
+    background: #142744;
+    border-radius: 10px;
+  }
+  .chain-container::-webkit-scrollbar-thumb {
+    background-color: #36D1DC;
+    border-radius: 10px;
+  }
+  .block {
+    min-width: 300px;
+    background: #25385d;
+    border-radius: 12px;
+    padding: 1.25rem 1.75rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+    transition: all 0.3s ease;
+  }
+  .block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .block::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    width: 60px;
+    height: 4px;
+    background: #36D1DC;
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+  .block:last-child::before {
+    display: none;
+  }
+  .block h3 {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #36D1DC;
+  }
+  .block small {
+    color: #a0b9d9;
+    display: block;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+  }
+  .block .hash {
+    word-break: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    background: #142744;
+    color: #36D1DC;
+    padding: 8px 12px;
+    border-radius: 8px;
+    user-select: all;
+    margin: 5px 0;
+    line-height: 1.4;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  footer {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #a0b9d9;
+    font-size: 0.9rem;
+    padding: 1rem;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(12px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  .status-indicator {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 8px;
+    background: #2c3e50;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-Registrado { background: #3498db; }
+  .status-En-transporte { background: #f39c12; }
+  .status-En-proceso { background: #9b59b6; }
+  .status-En-desmontaje { background: #e67e22; }
+  .status-Componentes { background: #1abc9c; }
+  .status-Materiales { background: #27ae60; }
+  .status-Reciclaje { background: #2ecc71; }
+  .status-Disposición { background: #7f8c8d; }
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: rgba(31, 65, 108, 0.4);
+    border-radius: 10px;
+    margin-top: 1rem;
+    border: 1px dashed rgba(54, 209, 220, 0.3);
+  }
+  .empty-state p {
+    color: #b3d4fc;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  /* Dashboard Styles */
+  .dashboard-section {
+    background: #22355a;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .dashboard-title {
+    color: #36D1DC;
+    margin-top: 0;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .dashboard-summary {
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+  .dashboard-metric {
+    background: rgba(31, 65, 108, 0.6);
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #b3d4fc;
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .dashboard-metric span {
+    color: #36D1DC;
+    font-weight: 700;
+  }
+  .dashboard-bars {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .dashboard-bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8em;
+  }
+  .dashboard-bar-label {
+    width: 150px;
+    font-size: 1rem;
+    color: #8ed6fb;
+    text-align: right;
+    margin-right: 1em;
+  }
+  .dashboard-bar-track {
+    height: 25px;
+    background: #1e2c48;
+    border-radius: 6px;
+    flex: 1;
+    margin-right: 0.8em;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(54, 209, 220, 0.1);
+  }
+  .dashboard-bar-fill {
+    background: linear-gradient(90deg, #36D1DC 40%, #1fa7c7 100%);
+    height: 100%;
+    border-radius: 6px;
+    min-width: 2px;
+    transition: width 0.7s cubic-bezier(0.4,0.7,0.6,1.0);
+  }
+  .dashboard-bar-value {
+    width: 40px;
+    font-weight: bold;
+    color: #fff;
+    text-align: left;
+    font-size: 1rem;
+  }
+  .dashboard-chart-container {
+    margin-top: 2rem;
+    background: rgba(31, 65, 108, 0.4);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .dashboard-chart-title {
+    color: #36D1DC;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.3rem;
+  }
+  .dashboard-chart {
+    height: 300px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    padding-top: 1rem;
+  }
+  .chart-bar {
+    width: 50px;
+    background: linear-gradient(to top, #36D1DC, #1fa7c7);
+    border-radius: 5px 5px 0 0;
+    position: relative;
+    transition: height 0.7s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .chart-bar-label {
+    position: absolute;
+    bottom: -25px;
+    color: #b3d4fc;
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+  }
+  .chart-bar-value {
+    position: absolute;
+    top: -25px;
+    color: #fff;
+    font-weight: bold;
+  }
+  /* Map Styles */
+  .map-container {
+    height: 400px;
+    margin: 1.5rem 0;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(54, 209, 220, 0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+  .map-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .map-controls button {
+    background: #36D1DC;
+    color: #142744;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .map-controls button:hover {
+    background: #28a0b0;
+  }
+  /* Reports Section */
+  .reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .report-card {
+    background: rgba(31, 65, 108, 0.6);
+    border-radius: 10px;
+    padding: 1.5rem;
+    border-top: 4px solid #36D1DC;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    background: rgba(31, 65, 108, 0.8);
+  }
+  .report-card h3 {
+    margin-top: 0;
+    color: #36D1DC;
+  }
+  .report-card p {
+    color: #b3d4fc;
+    margin-bottom: 1rem;
+  }
+  .report-card .report-icon {
+    font-size: 2rem;
+    color: #36D1DC;
+    margin-bottom: 1rem;
+  }
+  /* Notifications Panel */
+  .notifications-panel {
+    background: rgba(31, 65, 108, 0.6);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .notification {
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    background: rgba(54, 209, 220, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #36D1DC;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .notification.unread {
+    background: rgba(31, 65, 108, 0.8);
+    border-left: 4px solid #f39c12;
+  }
+  .notification-icon {
+    font-size: 1.2rem;
+    margin-top: 2px;
+  }
+  .notification-content {
+    flex: 1;
+  }
+  .notification-time {
+    font-size: 0.8rem;
+    color: #a0b9d9;
+    margin-top: 0.3rem;
+  }
+  .notification-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .notification-actions button {
+    background: transparent;
+    border: none;
+    color: #b3d4fc;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  /* User Profile */
+  .profile-container {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .profile-info {
+    flex: 1;
+    min-width: 300px;
+    background: rgba(31, 65, 108, 0.6);
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .profile-info h3 {
+    margin-top: 0;
+    color: #36D1DC;
+    border-bottom: 1px solid rgba(54, 209, 220, 0.3);
+    padding-bottom: 0.5rem;
+  }
+  .profile-info p {
+    margin: 0.8rem 0;
+    color: #b3d4fc;
+  }
+  .profile-info strong {
+    color: #36D1DC;
+    margin-right: 0.5rem;
+  }
+  .profile-stats {
+    flex: 1;
+    min-width: 300px;
+    background: rgba(31, 65, 108, 0.6);
+    border-radius: 10px;
+    padding: 1.5rem;
+    border: 1px solid rgba(54, 209, 220, 0.2);
+  }
+  .profile-stats h3 {
+    margin-top: 0;
+    color: #36D1DC;
+    border-bottom: 1px solid rgba(54, 209, 220, 0.3);
+    padding-bottom: 0.5rem;
+  }
+  /* Modal Styles */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-content {
+    background: #25385d;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    position: relative;
+    border: 1px solid rgba(54, 209, 220, 0.3);
+  }
+  .close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.5rem;
+    color: #b3d4fc;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .modal-title {
+    margin-top: 0;
+    color: #36D1DC;
+    margin-bottom: 1.5rem;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+  }
+  .modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .modal-btn-primary {
+    background: #36D1DC;
+    color: #142744;
+  }
+  .modal-btn-primary:hover {
+    background: #28a0b0;
+  }
+  .modal-btn-secondary {
+    background: #e74c3c;
+    color: white;
+  }
+  .modal-btn-secondary:hover {
+    background: #c0392b;
+  }
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    header {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1rem;
+    }
+    header h1 {
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    nav button {
+      margin: 0;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+    .user-info {
+      margin: 0.8rem 0 0;
+      justify-content: center;
+      width: 100%;
+    }
+    main {
+      padding: 1rem;
+    }
+    .welcome-container {
+      padding: 1.5rem;
+    }
+    .welcome-title {
+      font-size: 1.8rem;
+    }
+    .welcome-subtitle {
+      font-size: 1.1rem;
+    }
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+    form {
+      padding: 1.2rem;
+    }
+    .auth-modal {
+      padding: 1.5rem;
+      min-width: 90%;
+    }
+    .steps {
+      flex-direction: column;
+    }
+    .step {
+      max-width: 100%;
+    }
+    .modal-content {
+      width: 95%;
+      padding: 1.5rem;
+    }
+    .modal-buttons {
+      flex-direction: column;
+    }
+  }
+  @media (max-width: 480px) {
+    .block {
+      min-width: 260px;
+      padding: 1rem;
+    }
+    .welcome-title {
+      font-size: 1.6rem;
+    }
+    .welcome-subtitle {
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Blockchain Trazabilidad - Residuos Electrónicos</h1>
+  <nav>
+    <button id="nav-home" class="active" aria-label="Inicio">Inicio</button>
+    <button id="nav-dashboard" aria-label="Dashboard">Dashboard</button>
+    <button id="nav-register" aria-label="Registrar Residuo">Registrar</button>
+    <button id="nav-trace" aria-label="Ver Trazabilidad">Trazabilidad</button>
+    <button id="nav-map" aria-label="Mapa de Centros">Mapa</button>
+    <button id="nav-reports" aria-label="Reportes">Reportes</button>
+    <button id="nav-profile" aria-label="Perfil">Perfil</button>
+    <button id="nav-login" aria-label="Iniciar sesión/Registro">Acceder</button>
+  </nav>
+  <div id="userInfo" class="user-info" style="display:none;"></div>
+</header>
+<main>
+  <section id="section-home" class="active" aria-label="Sección de inicio">
+    <div class="welcome-container">
+      <h1 class="welcome-title">Trazabilidad Blockchain para Residuos Electrónicos</h1>
+      <p class="welcome-subtitle">Sistema seguro y transparente para gestionar el ciclo completo de residuos electrónicos en PYMES. Garantiza la trazabilidad desde la recolección hasta el reciclaje final.</p>
+      
+      <button class="welcome-cta" id="welcomeRegisterBtn">
+        <span>Registrar mi primer residuo</span>
+      </button>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="icon">🔍</div>
+          <h3>Trazabilidad Total</h3>
+          <p>Seguimiento en tiempo real de cada etapa del proceso de reciclaje electrónico con tecnología blockchain.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🔒</div>
+          <h3>Datos Seguros</h3>
+          <p>Registros inmutables y transparentes que garantizan la integridad de la información en todo momento.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">📱</div>
+          <h3>Fácil de Usar</h3>
+          <p>Interfaz intuitiva diseñada específicamente para PYMES, sin requerir conocimientos técnicos avanzados.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="how-it-works">
+      <h2>¿Cómo funciona nuestra plataforma?</h2>
+      <p style="color: #b3d4fc; text-align: center; max-width: 800px; margin: 0 auto 1.5rem;">
+        Sigue estos simples pasos para gestionar tus residuos electrónicos de manera responsable y transparente
+      </p>
+      
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h4>Registro</h4>
+          <p>Ingresa los datos del residuo electrónico que deseas gestionar, incluyendo tipo, descripción y procedencia.</p>
+        </div>
+        
+        <div class="step">
+          <div class="step-number">2</div>
+          <h4>Seguimiento</h4>
+          <p>Monitorea en tiempo real el estado y ubicación de tus residuos a través de nuestra cadena de bloques.</p>
+        </div>
+        
+        <div class="step">
+          <div class="step-number">3</div>
+          <h4>Actualización</h4>
+          <p>Modifica manualmente los estados cuando el residuo avanza en el proceso de reciclaje.</p>
+        </div>
+        
+        <div class="step">
+          <div class="step-number">4</div>
+          <h4>Reportes</h4>
+          <p>Genera informes y dashboards con estadísticas sobre tus procesos de reciclaje.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background: rgba(31, 65, 108, 0.6); padding: 2rem; border-radius: 12px; margin-top: 3rem; text-align: center; border: 1px solid rgba(54, 209, 220, 0.2);">
+      <h3 style="margin-top: 0; color: #36D1DC;">¿Listo para comenzar?</h3>
+      <p style="color: #b3d4fc; max-width: 600px; margin: 0 auto 1.5rem;">
+        Únete a las PYMES que ya están gestionando sus residuos electrónicos de manera responsable y transparente.
+      </p>
+      <button class="welcome-cta" id="welcomeLoginBtn">
+        <span>Iniciar sesión o registrarse</span>
+      </button>
+    </div>
+  </section>
+
+  <section id="section-dashboard" class="dashboard-section" style="display:none;" aria-label="Dashboard">
+    <h2 class="dashboard-title">Dashboard de Residuos Electrónicos</h2>
+    <div class="dashboard-summary" id="dashboardSummary">
+      <div class="dashboard-metric" id="dashboardTotal">Total residuos: <span>0</span></div>
+    </div>
+    <div class="dashboard-bars" id="dashboardBars"></div>
+    <div class="dashboard-chart-container">
+      <h3 class="dashboard-chart-title">Distribución de Residuos por Tipo</h3>
+      <div class="dashboard-chart" id="dashboardChart"></div>
+    </div>
+    <div id="dashboardEmpty" style="margin-top:2em; color:#b3d4fc; display:none; text-align: center;">
+      No hay residuos registrados aún. Registre residuos para ver el dashboard.
+    </div>
+    
+    <div class="notifications-panel">
+      <h3>Notificaciones Recientes</h3>
+      <div id="notificationsList">
+        <div class="empty-state" style="margin: 1rem 0 0;">
+          <p>No hay notificaciones recientes</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="section-register" aria-label="Sección para registrar residuo">
+    <h2>Registrar Residuo Electrónico</h2>
+    <div id="registerNotice" style="display:none; background: rgba(231, 76, 60, 0.2); color: #ffb8b8; padding: 1rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.15); border: 1px solid rgba(231, 76, 60, 0.3);">
+      Debe <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="registerLoginLink">iniciar sesión</span> o <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="registerRegLink">crear una cuenta</span> para registrar un residuo electrónico.
+    </div>
+    <form id="wasteForm" aria-describedby="formDesc" novalidate>
+      <p id="formDesc" style="color: #b3d4fc; margin-bottom: 1.5rem;">Ingrese los datos para registrar un nuevo residuo electrónico y su descripción. Todos los campos son obligatorios.</p>
+      <label for="producerName">Nombre de la Pyme o Productor</label>
+      <input type="text" id="producerName" name="producerName" placeholder="Ej: Empresa XYZ S.A.C." required minlength="3" />
+      
+      <label for="wasteType">Tipo de Residuo Electrónico</label>
+      <select id="wasteType" name="wasteType" required>
+        <option value="" disabled selected>Seleccione un tipo</option>
+        <option value="Computadora">Computadora</option>
+        <option value="Laptop">Laptop</option>
+        <option value="Celular">Celular</option>
+        <option value="Tablet">Tablet</option>
+        <option value="Televisor">Televisor</option>
+        <option value="Monitor">Monitor</option>
+        <option value="Impresora">Impresora</option>
+        <option value="Router">Router/Modem</option>
+        <option value="Batería">Batería</option>
+        <option value="Cargador">Cargador</option>
+        <option value="Otro">Otro</option>
+      </select>
+      
+      <label for="serialNumber">Número de Serie (opcional)</label>
+      <input type="text" id="serialNumber" name="serialNumber" placeholder="Ej: SN123456789" />
+      
+      <label for="weight">Peso aproximado (kg)</label>
+      <input type="number" id="weight" name="weight" placeholder="Ej: 5.2" min="0.1" step="0.1" />
+      
+      <label for="description">Descripción / Estado</label>
+      <textarea id="description" name="description" rows="4" placeholder="Descripción detallada del residuo, estado actual, componentes, daños visibles..." required minlength="10"></textarea>
+      
+      <div id="formMessage" role="alert" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <button type="submit" id="submitBtn">
+        <span id="submitText">Registrar Residuo</span>
+        <span id="submitSpinner" class="loading-spinner" style="display: none;"></span>
+      </button>
+    </form>
+  </section>
+  
+  <section id="section-trace" aria-label="Sección ver trazabilidad del residuo">
+    <h2>Trazabilidad Blockchain</h2>
+    <div id="traceNotice" style="display:none; background: rgba(231, 76, 60, 0.2); color: #ffb8b8; padding: 1rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.15); border: 1px solid rgba(231, 76, 60, 0.3);">
+      Debe <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="traceLoginLink">iniciar sesión</span> o <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="traceRegLink">crear una cuenta</span> para ver la trazabilidad de los residuos electrónicos.
+    </div>
+    <div id="traceContent">
+      <p style="color: #b3d4fc;">Visualice la cadena de bloques que registra cada etapa del residuo electrónico. Puede actualizar el estado de cualquier residuo registrado.</p>
+      
+      <div style="margin: 1.5rem 0; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 250px;">
+          <label for="filterType" style="display: block; margin-bottom: 0.5rem; color: #b3d4fc; font-weight: 600;">Filtrar por tipo:</label>
+          <select id="filterType" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: rgba(56, 90, 155, 0.7); color: #f0f0f0; border: 1px solid rgba(54, 209, 220, 0.3);">
+            <option value="">Todos los tipos</option>
+            <option value="Computadora">Computadora</option>
+            <option value="Laptop">Laptop</option>
+            <option value="Celular">Celular</option>
+            <option value="Tablet">Tablet</option>
+            <option value="Televisor">Televisor</option>
+            <option value="Monitor">Monitor</option>
+            <option value="Impresora">Impresora</option>
+            <option value="Router">Router/Modem</option>
+            <option value="Batería">Batería</option>
+            <option value="Cargador">Cargador</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+          <label for="filterStatus" style="display: block; margin-bottom: 0.5rem; color: #b3d4fc; font-weight: 600;">Filtrar por estado:</label>
+          <select id="filterStatus" style="width: 100%; padding: 0.5rem; border-radius: 6px; background: rgba(56, 90, 155, 0.7); color: #f0f0f0; border: 1px solid rgba(54, 209, 220, 0.3);">
+            <option value="">Todos los estados</option>
+            <option value="Registrado">Registrado</option>
+            <option value="En transporte">En transporte</option>
+            <option value="En proceso">En proceso</option>
+            <option value="En desmontaje">En desmontaje</option>
+            <option value="Componentes">Componentes</option>
+            <option value="Materiales">Materiales</option>
+            <option value="Reciclaje">Reciclaje</option>
+            <option value="Disposición">Disposición</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 250px; display: flex; align-items: flex-end;">
+          <button id="applyFilters" style="padding: 0.5rem 1rem; background: #36D1DC; color: #142744; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%;">
+            Aplicar Filtros
+          </button>
+        </div>
+      </div>
+      
+      <div id="chain" class="chain-container" aria-live="polite" aria-relevant="additions">
+        <div id="empty-chain" class="empty-state">
+          <p>No hay residuos registrados aún.</p>
+          <p>Registre un residuo electrónico para comenzar a ver la trazabilidad.</p>
+        </div>
+      </div>
+      
+      <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button id="clearChainBtn" style="background: #e74c3c; color: #fff; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Limpiar Cadena
+        </button>
+        <button id="exportChainBtn" style="background: #36D1DC; color: #142744; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Exportar Datos
+        </button>
+        <button id="importChainBtn" style="background: #2ecc71; color: #142744; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Importar Datos
+        </button>
+        <button id="exportExcelBtn" style="background: #27ae60; color: #fff; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Exportar a Excel
+        </button>
+      </div>
+    </div>
+  </section>
+  
+  <section id="section-map" style="display:none;" aria-label="Mapa de centros de acopio">
+    <h2>Mapa de Centros de Acopio</h2>
+    <p style="color: #b3d4fc;">Visualice los centros de acopio autorizados y la ubicación actual de sus residuos electrónicos.</p>
+    
+    <div class="map-controls">
+      <button id="showCenters">Mostrar Centros</button>
+      <button id="showWaste">Mostrar Mis Residuos</button>
+      <button id="showRoute">Calcular Ruta</button>
+    </div>
+    
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+    
+    <div id="mapInfo" style="margin-top: 1rem; color: #b3d4fc;"></div>
+  </section>
+  
+  <section id="section-reports" style="display:none;" aria-label="Sección de reportes">
+    <h2>Reportes y Estadísticas</h2>
+    <p style="color: #b3d4fc;">Genere reportes detallados sobre el manejo de sus residuos electrónicos.</p>
+    
+    <div class="reports-grid">
+      <div class="report-card" id="generateTimeReport">
+        <div class="report-icon">⏱️</div>
+        <h3>Tiempos de Proceso</h3>
+        <p>Reporte de tiempos promedio entre cada etapa del proceso de reciclaje.</p>
+      </div>
+      
+      <div class="report-card" id="generateMonthlyReport">
+        <div class="report-icon">📅</div>
+        <h3>Reporte Mensual</h3>
+        <p>Resumen mensual de residuos procesados por tipo y estado.</p>
+      </div>
+      
+      <div class="report-card" id="generateCertification">
+        <div class="report-icon">📄</div>
+        <h3>Certificados</h3>
+        <p>Genere certificados de disposición final para auditorías.</p>
+      </div>
+      
+      <div class="report-card" id="generateFullReport">
+        <div class="report-icon">📊</div>
+        <h3>Reporte Completo</h3>
+        <p>Reporte detallado con todos los datos históricos en formato PDF.</p>
+      </div>
+    </div>
+    
+    <div id="reportContainer" style="margin-top: 2rem;"></div>
+  </section>
+  
+  <section id="section-profile" style="display:none;" aria-label="Sección de perfil de usuario">
+    <h2>Mi Perfil</h2>
+    
+    <div id="profileNotice" style="display:none; background: rgba(231, 76, 60, 0.2); color: #ffb8b8; padding: 1rem 1.2rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,0.15); border: 1px solid rgba(231, 76, 60, 0.3);">
+      Debe <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="profileLoginLink">iniciar sesión</span> o <span style="text-decoration:underline; cursor:pointer; color:#36D1DC;" id="profileRegLink">crear una cuenta</span> para acceder a su perfil.
+    </div>
+    
+    <div id="profileContent" style="display:none;">
+      <div class="profile-container">
+        <div class="profile-info">
+          <h3>Información del Usuario</h3>
+          <p><strong>Nombre de usuario:</strong> <span id="profileUsername"></span></p>
+          <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+          <p><strong>Fecha de registro:</strong> <span id="profileRegisterDate"></span></p>
+          <p><strong>Último acceso:</strong> <span id="profileLastLogin"></span></p>
+          
+          <button id="changePasswordBtn" style="margin-top: 1.5rem; background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Cambiar Contraseña
+          </button>
+        </div>
+        
+        <div class="profile-stats">
+          <h3>Estadísticas</h3>
+          <p><strong>Residuos registrados:</strong> <span id="profileWasteCount">0</span></p>
+          <p><strong>Actualizaciones realizadas:</strong> <span id="profileUpdatesCount">0</span></p>
+          <p><strong>Reportes generados:</strong> <span id="profileReportsCount">0</span></p>
+          <p><strong>Miembro desde:</strong> <span id="profileMemberSince">0</span> días</p>
+          
+          <button id="exportProfileData" style="margin-top: 1.5rem; background: #2ecc71; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Exportar Mis Datos
+          </button>
+        </div>
+      </div>
+      
+      <div class="notifications-panel" style="margin-top: 2rem;">
+        <h3>Configuración de Notificaciones</h3>
+        <form id="notificationSettings">
+          <label style="display: flex; align-items: center; margin: 1rem 0; cursor: pointer;">
+            <input type="checkbox" name="emailNotifications" style="margin-right: 0.8rem;">
+            Recibir notificaciones por email
+          </label>
+          
+          <label style="display: flex; align-items: center; margin: 1rem 0; cursor: pointer;">
+            <input type="checkbox" name="statusChangeNotifications" style="margin-right: 0.8rem;" checked>
+            Alertas por cambio de estado
+          </label>
+          
+          <label style="display: flex; align-items: center; margin: 1rem 0; cursor: pointer;">
+            <input type="checkbox" name="monthlyReport" style="margin-right: 0.8rem;">
+            Reporte mensual automático
+          </label>
+          
+          <button type="submit" style="margin-top: 1rem; background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+            Guardar Configuración
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Update Status Modal -->
+<div id="updateStatusModal" class="modal-bg">
+  <div class="modal-content">
+    <button class="close-modal" id="closeUpdateStatusModal">&times;</button>
+    <h2 class="modal-title">Actualizar Estado del Residuo</h2>
+    
+    <form id="updateStatusForm">
+      <label for="updateStatus">Nuevo Estado</label>
+      <select id="updateStatus" required>
+        <option value="" disabled selected>Seleccione un estado</option>
+        <option value="Registrado">Registrado</option>
+        <option value="En transporte">En transporte</option>
+        <option value="En proceso">En proceso</option>
+        <option value="En desmontaje">En desmontaje</option>
+        <option value="Componentes">Componentes</option>
+        <option value="Materiales">Materiales</option>
+        <option value="Reciclaje">Reciclaje</option>
+        <option value="Disposición">Disposición</option>
+      </select>
+      
+      <label for="updateLocation">Ubicación Actual</label>
+      <input type="text" id="updateLocation" placeholder="Ej: Almacén principal, Centro de acopio Norte" required />
+      
+      <label for="updateNotes">Notas Adicionales</label>
+      <textarea id="updateNotes" placeholder="Detalles sobre el cambio de estado, observaciones..."></textarea>
+      
+      <div id="updateStatusMessage" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn modal-btn-secondary" id="cancelUpdate">Cancelar</button>
+        <button type="submit" class="modal-btn modal-btn-primary" id="confirmUpdate">Actualizar Estado</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="modal-bg">
+  <div class="modal-content">
+    <button class="close-modal" id="closeChangePasswordModal">&times;</button>
+    <h2 class="modal-title">Cambiar Contraseña</h2>
+    
+    <form id="changePasswordForm">
+      <label for="currentPassword">Contraseña Actual</label>
+      <input type="password" id="currentPassword" required />
+      
+      <label for="newPassword">Nueva Contraseña</label>
+      <input type="password" id="newPassword" required />
+      <div class="password-strength">
+        <div class="password-strength-bar" id="newPasswordStrength"></div>
+      </div>
+      <small style="color: #a0b9d9; display: block; margin-top: 2px;">Mínimo 4 caracteres</small>
+      
+      <label for="confirmNewPassword">Confirmar Nueva Contraseña</label>
+      <input type="password" id="confirmNewPassword" required />
+      
+      <div id="passwordMessage" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn modal-btn-secondary" id="cancelPasswordChange">Cancelar</button>
+        <button type="submit" class="modal-btn modal-btn-primary" id="submitPasswordChange">Cambiar Contraseña</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- File Import Modal -->
+<div id="importModal" class="modal-bg">
+  <div class="modal-content">
+    <button class="close-modal" id="closeImportModal">&times;</button>
+    <h2 class="modal-title">Importar Datos de Blockchain</h2>
+    
+    <form id="importForm">
+      <label for="importFile">Seleccione archivo JSON:</label>
+      <input type="file" id="importFile" accept=".json" required />
+      
+      <div style="margin: 1rem 0; padding: 1rem; background: rgba(31, 65, 108, 0.4); border-radius: 8px; border: 1px dashed rgba(54, 209, 220, 0.3);">
+        <p style="margin: 0; color: #b3d4fc;">El archivo debe ser un JSON válido exportado previamente desde esta plataforma.</p>
+      </div>
+      
+      <div id="importMessage" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <div class="modal-buttons">
+        <button type="button" class="modal-btn modal-btn-secondary" id="cancelImport">Cancelar</button>
+        <button type="submit" class="modal-btn modal-btn-primary" id="confirmImport">Importar Datos</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Clear Chain Confirmation Modal -->
+<div id="clearChainModal" class="modal-bg">
+  <div class="modal-content">
+    <button class="close-modal" id="closeClearChainModal">&times;</button>
+    <h2 class="modal-title">¿Limpiar toda la cadena?</h2>
+    <p style="color: #b3d4fc;">Esta acción eliminará <b>todos los registros</b> de residuos electrónicos de forma permanente.<br>¿Desea continuar?</p>
+    
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-secondary" id="cancelClearChain">Cancelar</button>
+      <button class="modal-btn modal-btn-primary" id="confirmClearChain">Sí, limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Clear Chain Success Modal -->
+<div id="successClearChainModal" class="modal-bg">
+  <div class="modal-content">
+    <div style="font-size:3rem; margin-bottom:1rem; color:#36D1DC;">✓</div>
+    <h2 class="modal-title">¡Cadena limpiada!</h2>
+    <p style="color: #b3d4fc; margin-bottom:2rem;">La cadena de bloques fue eliminada correctamente.<br>Ahora puedes registrar nuevos residuos.</p>
+    <button class="modal-btn modal-btn-primary" id="closeSuccessClearChain">Cerrar</button>
+  </div>
+</div>
+
+<!-- LOGIN / REGISTER MODAL -->
+<div id="authModalBg" class="modal-bg">
+  <div class="modal-content">
+    <button class="close-modal" id="closeAuthModal">&times;</button>
+    <h2 class="modal-title" id="authTitle">Iniciar sesión</h2>
+    
+    <form id="loginForm" autocomplete="off" style="display:block;">
+      <label for="loginUser">Usuario o Email</label>
+      <input id="loginUser" type="text" name="loginUser" required minlength="3" autocomplete="username" />
+      
+      <label for="loginPass">Contraseña</label>
+      <input id="loginPass" type="password" name="loginPass" required minlength="4" autocomplete="current-password" />
+      
+      <div id="loginMessage" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <div class="modal-buttons">
+        <button type="submit" class="modal-btn modal-btn-primary">Entrar</button>
+      </div>
+      
+      <p style="text-align: center; margin-top: 1rem; color: #b3d4fc;">
+        ¿No tienes cuenta? <a href="#" id="toRegister" style="color: #36D1DC; text-decoration: none;">Regístrate</a>
+      </p>
+    </form>
+    
+    <form id="registerForm" autocomplete="off" style="display:none;">
+      <label for="regUser">Usuario</label>
+      <input id="regUser" type="text" name="regUser" required minlength="3" />
+      
+      <label for="regEmail">Email</label>
+      <input id="regEmail" type="email" name="regEmail" required />
+      
+      <label for="regPass">Contraseña</label>
+      <input id="regPass" type="password" name="regPass" required minlength="4" oninput="checkPasswordStrength(this.value)" />
+      <div class="password-strength">
+        <div class="password-strength-bar" id="passwordStrength"></div>
+      </div>
+      <small style="color: #a0b9d9; display: block; margin-top: 2px;">Mínimo 4 caracteres</small>
+      
+      <label for="regPass2">Confirmar Contraseña</label>
+      <input id="regPass2" type="password" name="regPass2" required minlength="4" />
+      
+      <div id="registerMessage" style="margin: 1rem 0; padding: 0.8rem; border-radius: 6px; display: none;"></div>
+      
+      <div class="modal-buttons">
+        <button type="submit" class="modal-btn modal-btn-primary">Registrar</button>
+      </div>
+      
+      <p style="text-align: center; margin-top: 1rem; color: #b3d4fc;">
+        ¿Ya tienes cuenta? <a href="#" id="toLogin" style="color: #36D1DC; text-decoration: none;">Inicia sesión</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<footer>
+  &copy; 2025 Plataforma Blockchain - Lima Metropolitana PYMES | Versión 2.0
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+// --- CONSTANTS ---
+const STATUS_FLOW = [
+  "Registrado",
+  "En transporte",
+  "En proceso",
+  "En desmontaje",
+  "Componentes",
+  "Materiales",
+  "Reciclaje",
+  "Disposición"
+];
+
+const WASTE_TYPES = [
+  "Computadora", "Laptop", "Celular", "Tablet", "Televisor", 
+  "Monitor", "Impresora", "Router", "Batería", "Cargador", "Otro"
+];
+
+// Centros de acopio en Lima (coordenadas aproximadas)
+const RECYCLING_CENTERS = [
+  { name: "Centro de Acopio Norte", lat: -11.9900, lng: -77.0600, address: "Av. Túpac Amaru 210, Independencia" },
+  { name: "Centro de Reciclaje Sur", lat: -12.1500, lng: -76.9900, address: "Av. Los Héroes 345, San Juan de Miraflores" },
+  { name: "EcoRecicla Este", lat: -12.0400, lng: -76.9300, address: "Av. Nicolás Ayllón 1234, Ate" },
+  { name: "Recicla Lima Oeste", lat: -12.1000, lng: -77.0500, address: "Av. Argentina 456, Callao" },
+  { name: "Centro Principal de Reciclaje", lat: -12.0700, lng: -77.0300, address: "Av. Canadá 789, San Luis" }
+];
+
+// --- UTILITY FUNCTIONS ---
+function showToast(message, type = 'info', duration = 5000) {
+  const toastContainer = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    ${message}
+    <button class="toast-close">&times;</button>
+  `;
+  
+  toastContainer.appendChild(toast);
+  
+  // Show toast
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+  
+  // Close button
+  toast.querySelector('.toast-close').addEventListener('click', () => {
+    hideToast(toast);
+  });
+  
+  // Auto-hide
+  if (duration > 0) {
+    setTimeout(() => {
+      hideToast(toast);
+    }, duration);
+  }
+  
+  return toast;
+}
+
+function hideToast(toastElement) {
+  toastElement.classList.remove('show');
+  setTimeout(() => {
+    toastElement.remove();
+  }, 300);
+}
+
+function showLoading(element, textElement, originalText) {
+  element.disabled = true;
+  if (textElement) textElement.textContent = 'Procesando...';
+  const spinner = textElement ? textElement.previousElementSibling : null;
+  if (spinner) spinner.style.display = 'inline-block';
+}
+
+function hideLoading(element, textElement, originalText) {
+  element.disabled = false;
+  if (textElement) textElement.textContent = originalText;
+  const spinner = textElement ? textElement.previousElementSibling : null;
+  if (spinner) spinner.style.display = 'none';
+}
+
+function checkPasswordStrength(password) {
+  const strengthBar = document.getElementById('passwordStrength') || 
+                     document.getElementById('newPasswordStrength');
+  if (!strengthBar) return;
+  
+  // Reset
+  strengthBar.style.width = '0';
+  strengthBar.className = 'password-strength-bar';
+  
+  if (password.length === 0) return;
+  
+  // Calculate strength
+  let strength = 0;
+  if (password.length >= 4) strength += 1;
+  if (password.length >= 8) strength += 1;
+  if (/[A-Z]/.test(password)) strength += 1;
+  if (/[0-9]/.test(password)) strength += 1;
+  if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+  
+  // Update UI
+  if (strength <= 2) {
+    strengthBar.style.width = '30%';
+    strengthBar.classList.add('strength-weak');
+  } else if (strength <= 4) {
+    strengthBar.style.width = '60%';
+    strengthBar.classList.add('strength-medium');
+  } else {
+    strengthBar.style.width = '100%';
+    strengthBar.classList.add('strength-strong');
+  }
+}
+
+// --- AUTH & USER MANAGEMENT ---
+function getUsers() { 
+  return JSON.parse(localStorage.getItem("eWasteUsers") || "[]"); 
+}
+
+function saveUsers(users) { 
+  localStorage.setItem("eWasteUsers", JSON.stringify(users)); 
+}
+
+function getCurrentUser() { 
+  return JSON.parse(localStorage.getItem("eWasteCurrentUser") || "null"); 
+}
+
+function setCurrentUser(userObj) {
+  if (userObj) {
+    // Update last login time
+    userObj.lastLogin = new Date().toISOString();
+    localStorage.setItem("eWasteCurrentUser", JSON.stringify(userObj));
+    
+    // Update in users array
+    let users = getUsers();
+    const userIndex = users.findIndex(u => u.user.toLowerCase() === userObj.user.toLowerCase());
+    if (userIndex !== -1) {
+      users[userIndex].lastLogin = userObj.lastLogin;
+      saveUsers(users);
+    }
+    
+    showToast(`Bienvenido, ${userObj.user}`, 'success');
+  } else {
+    localStorage.removeItem("eWasteCurrentUser");
+    showToast('Sesión cerrada correctamente', 'info');
+  }
+}
+
+async function hashPassword(pass) {
+  const enc = new TextEncoder();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', enc.encode(pass));
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// Initialize auth modal elements
+const authModalBg = document.getElementById('authModalBg');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const loginMessage = document.getElementById('loginMessage');
+const registerMessage = document.getElementById('registerMessage');
+const navLoginBtn = document.getElementById('nav-login');
+const closeAuthModal = document.getElementById('closeAuthModal');
+const toRegister = document.getElementById('toRegister');
+const toLogin = document.getElementById('toLogin');
+const userInfo = document.getElementById('userInfo');
+const welcomeRegisterBtn = document.getElementById('welcomeRegisterBtn');
+const welcomeLoginBtn = document.getElementById('welcomeLoginBtn');
+
+function showAuthModal(mode = "login") {
+  authModalBg.style.display = "flex";
+  document.body.style.overflow = "hidden";
+  loginForm.style.display = mode === "login" ? "block" : "none";
+  registerForm.style.display = mode === "register" ? "block" : "none";
+  document.getElementById("authTitle").textContent = mode === "login" ? "Iniciar sesión" : "Registro";
+  loginMessage.textContent = "";
+  loginMessage.style.display = "none";
+  registerMessage.textContent = "";
+  registerMessage.style.display = "none";
+  
+  setTimeout(() => {
+    if (mode === "login") document.getElementById("loginUser").focus();
+    else document.getElementById("regUser").focus();
+  }, 100);
+}
+
+function hideAuthModal() {
+  authModalBg.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+// Auth event listeners
+navLoginBtn.addEventListener("click", () => showAuthModal("login"));
+closeAuthModal.addEventListener("click", hideAuthModal);
+toRegister.addEventListener("click", () => showAuthModal("register"));
+toLogin.addEventListener("click", () => showAuthModal("login"));
+
+if (welcomeRegisterBtn) {
+  welcomeRegisterBtn.addEventListener("click", () => {
+    showAuthModal("register");
+  });
+}
+
+if (welcomeLoginBtn) {
+  welcomeLoginBtn.addEventListener("click", () => {
+    showAuthModal("login");
+  });
+}
+
+registerForm.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  registerMessage.textContent = "";
+  registerMessage.style.display = "none";
+  
+  const user = registerForm.regUser.value.trim();
+  const email = registerForm.regEmail.value.trim().toLowerCase();
+  const pass = registerForm.regPass.value;
+  const pass2 = registerForm.regPass2.value;
+  
+  if (user.length < 3) { 
+    showFormMessage(registerMessage, "Usuario debe tener al menos 3 caracteres.", 'error');
+    return; 
+  }
+  
+  if (!/^\S+@\S+\.\S+$/.test(email)) { 
+    showFormMessage(registerMessage, "Email inválido.", 'error');
+    return; 
+  }
+  
+  if (pass.length < 4) { 
+    showFormMessage(registerMessage, "Contraseña muy corta (mínimo 4 caracteres).", 'error');
+    return; 
+  }
+  
+  if (pass !== pass2) { 
+    showFormMessage(registerMessage, "Las contraseñas no coinciden.", 'error');
+    return; 
+  }
+  
+  let users = getUsers();
+  if (users.some(u => u.user.toLowerCase() === user.toLowerCase())) {
+    showFormMessage(registerMessage, "El nombre de usuario ya está en uso.", 'error');
+    return;
+  }
+  
+  if (users.some(u => u.email === email)) {
+    showFormMessage(registerMessage, "El email ya está registrado.", 'error');
+    return;
+  }
+  
+  const submitBtn = registerForm.querySelector('button[type="submit"]');
+  showLoading(submitBtn, null, null);
+  
+  try {
+    const hashed = await hashPassword(pass);
+    const newUser = { 
+      user, 
+      email, 
+      pass: hashed,
+      registeredAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      notifications: {
+        email: false,
+        statusChange: true,
+        monthlyReport: false
+      }
+    };
+    users.push(newUser);
+    saveUsers(users);
+    setCurrentUser({ user, email });
+    
+    showFormMessage(registerMessage, "¡Registro exitoso! Redireccionando...", 'success');
+    setTimeout(() => { 
+      hideAuthModal(); 
+      updateUserUI(); 
+      hideLoading(submitBtn, null, null);
+    }, 1200);
+  } catch (error) {
+    showFormMessage(registerMessage, "Error en el registro. Intente nuevamente.", 'error');
+    hideLoading(submitBtn, null, null);
+  }
+});
+
+loginForm.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  loginMessage.textContent = "";
+  loginMessage.style.display = "none";
+  
+  const userOrEmail = loginForm.loginUser.value.trim();
+  const pass = loginForm.loginPass.value;
+  
+  if (userOrEmail.length < 3 || pass.length < 4) {
+    showFormMessage(loginMessage, "Datos inválidos.", 'error');
+    return;
+  }
+  
+  const submitBtn = loginForm.querySelector('button[type="submit"]');
+  showLoading(submitBtn, null, null);
+  
+  try {
+    let users = getUsers();
+    const hashed = await hashPassword(pass);
+    const found = users.find(u =>
+      (u.user.toLowerCase() === userOrEmail.toLowerCase() || u.email === userOrEmail.toLowerCase()) && 
+      u.pass === hashed
+    );
+    
+    if (!found) {
+      showFormMessage(loginMessage, "Usuario/contraseña incorrectos.", 'error');
+      hideLoading(submitBtn, null, null);
+      return;
+    }
+    
+    setCurrentUser({ user: found.user, email: found.email });
+    showFormMessage(loginMessage, "¡Bienvenido!", 'success');
+    
+    setTimeout(() => { 
+      hideAuthModal(); 
+      updateUserUI(); 
+      hideLoading(submitBtn, null, null);
+    }, 900);
+  } catch (error) {
+    showFormMessage(loginMessage, "Error al iniciar sesión. Intente nuevamente.", 'error');
+    hideLoading(submitBtn, null, null);
+  }
+});
+
+function updateUserUI() {
+  const u = getCurrentUser();
+  
+  if (u) {
+    // User is logged in
+    userInfo.style.display = "flex";
+    userInfo.innerHTML = `
+      <span><span class="user-icon">👤</span>${u.user}</span>
+      <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">Salir</button>
+    `;
+    
+    navLoginBtn.style.display = "none";
+    
+    // Show protected content
+    if (document.getElementById("registerNotice")) {
+      document.getElementById("registerNotice").style.display = "none";
+    }
+    if (document.getElementById("wasteForm")) {
+      document.getElementById("wasteForm").style.display = "";
+    }
+    if (document.getElementById("traceNotice")) {
+      document.getElementById("traceNotice").style.display = "none";
+    }
+    if (document.getElementById("traceContent")) {
+      document.getElementById("traceContent").style.display = "";
+    }
+    if (document.getElementById("profileNotice")) {
+      document.getElementById("profileNotice").style.display = "none";
+    }
+    if (document.getElementById("profileContent")) {
+      document.getElementById("profileContent").style.display = "";
+      loadProfileData();
+    }
+    
+    // Set up logout button
+    setTimeout(() => {
+      const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) {
+        logoutBtn.onclick = function() {
+          setCurrentUser(null);
+          updateUserUI();
+        };
+      }
+    }, 50);
+    
+    // Load notifications
+    loadNotifications();
+  } else {
+    // User is not logged in
+    userInfo.style.display = "none";
+    navLoginBtn.style.display = "";
+    
+    // Hide protected content
+    if (document.getElementById("section-register")) {
+      document.getElementById("section-register").style.display = "";
+      if (document.getElementById("registerNotice")) {
+        document.getElementById("registerNotice").style.display = "";
+      }
+      if (document.getElementById("wasteForm")) {
+        document.getElementById("wasteForm").style.display = "none";
+      }
+      
+      setTimeout(() => {
+        const loginLink = document.getElementById("registerLoginLink");
+        const regLink = document.getElementById("registerRegLink");
+        if (loginLink) loginLink.onclick = () => showAuthModal("login");
+        if (regLink) regLink.onclick = () => showAuthModal("register");
+      }, 30);
+    }
+    
+    if (document.getElementById("section-trace")) {
+      document.getElementById("section-trace").style.display = "";
+      if (document.getElementById("traceNotice")) {
+        document.getElementById("traceNotice").style.display = "";
+      }
+      if (document.getElementById("traceContent")) {
+        document.getElementById("traceContent").style.display = "none";
+      }
+      
+      setTimeout(() => {
+        const loginLink = document.getElementById("traceLoginLink");
+        const regLink = document.getElementById("traceRegLink");
+        if (loginLink) loginLink.onclick = () => showAuthModal("login");
+        if (regLink) regLink.onclick = () => showAuthModal("register");
+      }, 30);
+    }
+    
+    if (document.getElementById("section-profile")) {
+      document.getElementById("section-profile").style.display = "";
+      if (document.getElementById("profileNotice")) {
+        document.getElementById("profileNotice").style.display = "";
+      }
+      if (document.getElementById("profileContent")) {
+        document.getElementById("profileContent").style.display = "none";
+      }
+      
+      setTimeout(() => {
+        const loginLink = document.getElementById("profileLoginLink");
+        const regLink = document.getElementById("profileRegLink");
+        if (loginLink) loginLink.onclick = () => showAuthModal("login");
+        if (regLink) regLink.onclick = () => showAuthModal("register");
+      }, 30);
+    }
+    
+    // Redirect to home if on protected page
+    const activeBtn = document.querySelector('nav button.active')?.id;
+    if (activeBtn === "nav-register" || activeBtn === "nav-trace" || 
+        activeBtn === "nav-dashboard" || activeBtn === "nav-profile") {
+      document.getElementById("nav-home").click();
+    }
+  }
+}
+
+function loadProfileData() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const users = getUsers();
+  const userData = users.find(u => u.user === user.user) || {};
+  
+  // Basic info
+  document.getElementById("profileUsername").textContent = userData.user || "-";
+  document.getElementById("profileEmail").textContent = userData.email || "-";
+  
+  // Dates
+  const registerDate = userData.registeredAt ? new Date(userData.registeredAt) : new Date();
+  document.getElementById("profileRegisterDate").textContent = registerDate.toLocaleDateString('es-PE');
+  
+  const lastLogin = userData.lastLogin ? new Date(userData.lastLogin) : new Date();
+  document.getElementById("profileLastLogin").textContent = lastLogin.toLocaleString('es-PE');
+  
+  // Stats
+  const blockchain = JSON.parse(localStorage.getItem('eWasteBlockchain') || []);
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  const userUpdates = blockchain.filter(b => b.data.updatedBy === user.user);
+  
+  document.getElementById("profileWasteCount").textContent = userWastes.length;
+  document.getElementById("profileUpdatesCount").textContent = userUpdates.length;
+  
+  // Member since
+  const today = new Date();
+  const diffTime = Math.abs(today - registerDate);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  document.getElementById("profileMemberSince").textContent = diffDays;
+  
+  // Notification settings
+  const notificationForm = document.getElementById("notificationSettings");
+  if (notificationForm && userData.notifications) {
+    notificationForm.emailNotifications.checked = userData.notifications.email || false;
+    notificationForm.statusChangeNotifications.checked = userData.notifications.statusChange || true;
+    notificationForm.monthlyReport.checked = userData.notifications.monthlyReport || false;
+  }
+}
+
+function loadNotifications() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const blockchain = JSON.parse(localStorage.getItem('eWasteBlockchain') || []);
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  
+  // Simulate some notifications
+  const notifications = [];
+  
+  // Notifications for wastes that need update
+  userWastes.forEach(waste => {
+    const lastUpdate = new Date(waste.timestamp);
+    const today = new Date();
+    const diffDays = Math.floor((today - lastUpdate) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 7 && waste.data.status !== "Disposición") {
+      notifications.push({
+        id: 'notif-' + Math.random().toString(36).substr(2, 9),
+        type: 'warning',
+        message: `El residuo ${waste.data.wasteType} está en estado "${waste.data.status}" hace ${diffDays} días`,
+        time: 'Hace ' + diffDays + ' días',
+        read: false,
+        wasteId: waste.hash
+      });
+    }
+  });
+  
+  // Add some system notifications
+  notifications.push({
+    id: 'notif-' + Math.random().toString(36).substr(2, 9),
+    type: 'info',
+    message: 'Bienvenido a la plataforma de trazabilidad de residuos electrónicos',
+    time: 'Hoy',
+    read: false
+  });
+  
+  if (userWastes.length > 0) {
+    notifications.push({
+      id: 'notif-' + Math.random().toString(36).substr(2, 9),
+      type: 'success',
+      message: `Tienes ${userWastes.length} residuos registrados en el sistema`,
+      time: 'Hoy',
+      read: false
+    });
+  }
+  
+  // Render notifications
+  const notificationsList = document.getElementById("notificationsList");
+  if (!notificationsList) return;
+  
+  if (notifications.length === 0) {
+    notificationsList.innerHTML = `
+      <div class="empty-state" style="margin: 1rem 0 0;">
+        <p>No hay notificaciones recientes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  notificationsList.innerHTML = notifications.map(notif => `
+    <div class="notification ${notif.read ? '' : 'unread'}" data-id="${notif.id}">
+      <div class="notification-icon">
+        ${notif.type === 'warning' ? '⚠️' : notif.type === 'success' ? '✅' : 'ℹ️'}
+      </div>
+      <div class="notification-content">
+        <div>${notif.message}</div>
+        <div class="notification-time">${notif.time}</div>
+      </div>
+      <div class="notification-actions">
+        <button class="mark-read" title="Marcar como leído">✓</button>
+      </div>
+    </div>
+  `).join('');
+  
+  // Add event listeners to mark as read
+  document.querySelectorAll('.mark-read').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const notification = this.closest('.notification');
+      notification.classList.remove('unread');
+      // In a real app, you would update the notification status in your database
+    });
+  });
+}
+
+// --- NAVIGATION ---
+document.getElementById("nav-dashboard").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-dashboard");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+document.getElementById("nav-home").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-home");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+document.getElementById("nav-register").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-register");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+document.getElementById("nav-trace").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-trace");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+document.getElementById("nav-map").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-map");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+  initMap();
+});
+
+document.getElementById("nav-reports").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-reports");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+document.getElementById("nav-profile").addEventListener("click", function(e) {
+  e.preventDefault();
+  showSection("section-profile");
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+});
+
+function showSection(sectionId) {
+  document.querySelectorAll('main > section').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = "none";
+  });
+  
+  const s = document.getElementById(sectionId);
+  if (s) {
+    s.classList.add('active');
+    s.style.display = "";
+    
+    if (sectionId === "section-dashboard") {
+      renderDashboard();
+    } else if (sectionId === "section-trace") {
+      renderChain();
+    } else if (sectionId === "section-profile") {
+      loadProfileData();
+    }
+  }
+}
+
+// --- BLOCKCHAIN FUNCTIONS ---
+let blockchain = [];
+let currentBlockIndex = null; // For update status functionality
+let map = null; // For map functionality
+let wasteMarkers = []; // To keep track of waste markers on map
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function createBlock(data, prevHash) {
+  return {
+    timestamp: new Date().toISOString(),
+    data,
+    previousHash: prevHash,
+    hash: '',
+    nonce: 0
+  };
+}
+
+async function mineBlock(block, difficulty = 3) {
+  return new Promise(async (resolve) => {
+    let prefix = '0'.repeat(difficulty);
+    
+    while (true) {
+      const blockString = JSON.stringify({...block, nonce: block.nonce});
+      const hash = await sha256(blockString);
+      
+      if (hash.startsWith(prefix)) {
+        block.hash = hash;
+        resolve(block);
+        break;
+      } else {
+        block.nonce++;
+      }
+    }
+  });
+}
+
+async function loadBlockchain() {
+  const stored = localStorage.getItem('eWasteBlockchain');
+  if (stored) {
+    try {
+      blockchain = JSON.parse(stored);
+      // Legacy data cleanup
+      if (blockchain.length === 1 && blockchain[0].data.info) {
+        blockchain = [];
+      }
+    } catch (e) {
+      console.error("Error loading blockchain:", e);
+      blockchain = [];
+    }
+  }
+  return blockchain;
+}
+
+function saveBlockchain() {
+  localStorage.setItem('eWasteBlockchain', JSON.stringify(blockchain));
+}
+
+// --- WASTE FORM HANDLING ---
+const wasteForm = document.getElementById('wasteForm');
+const formMessage = document.getElementById('formMessage');
+
+if (wasteForm) {
+  wasteForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    formMessage.textContent = '';
+    formMessage.style.display = 'none';
+    
+    const producerName = wasteForm.producerName.value.trim();
+    const wasteType = wasteForm.wasteType.value;
+    const serialNumber = wasteForm.serialNumber.value.trim();
+    const weight = wasteForm.weight.value;
+    const description = wasteForm.description.value.trim();
+    
+    // Validation
+    if (producerName.length < 3) {
+      showFormMessage(formMessage, 'El nombre de la Pyme debe tener al menos 3 caracteres.', 'error');
+      return;
+    }
+    
+    if (!wasteType) {
+      showFormMessage(formMessage, 'Seleccione un tipo válido de residuo.', 'error');
+      return;
+    }
+    
+    if (description.length < 10) {
+      showFormMessage(formMessage, 'La descripción debe tener al menos 10 caracteres.', 'error');
+      return;
+    }
+    
+    try {
+      showLoading(wasteForm.querySelector('button[type="submit"]'), 
+                document.getElementById('submitText'), 
+                'Registrar Residuo');
+      
+      showFormMessage(formMessage, 'Registrando residuo en la blockchain...', 'info');
+      
+      await loadBlockchain();
+      
+      // Create new block data
+      const blockData = {
+        producerName,
+        wasteType,
+        description,
+        status: "Registrado",
+        location: "Almacén inicial",
+        step: "Primer registro",
+        registeredBy: getCurrentUser()?.user || "Anónimo",
+        timestamp: new Date().toISOString(),
+        coordinates: getRandomCoordinates() // For map visualization
+      };
+      
+      // Add optional fields if they exist
+      if (serialNumber) blockData.serialNumber = serialNumber;
+      if (weight) blockData.weight = parseFloat(weight);
+      
+      // Create and mine new block
+      const prevHash = blockchain.length > 0 ? blockchain[blockchain.length-1].hash : '0';
+      const newBlock = createBlock(blockData, prevHash);
+      const minedBlock = await mineBlock(newBlock);
+      
+      // Add to blockchain
+      blockchain.push(minedBlock);
+      saveBlockchain();
+      
+      showFormMessage(formMessage, '¡Residuo registrado correctamente en la blockchain!', 'success');
+      wasteForm.reset();
+      
+      // Update views
+      renderChain();
+      renderDashboard();
+      
+      // Add notification
+      addNotification({
+        type: 'success',
+        message: `Nuevo residuo registrado: ${wasteType}`,
+        time: 'Ahora'
+      });
+      
+    } catch (error) {
+      console.error("Error registering waste:", error);
+      showFormMessage(formMessage, `Error al registrar: ${error.message}`, 'error');
+    } finally {
+      hideLoading(wasteForm.querySelector('button[type="submit"]'), 
+                 document.getElementById('submitText'), 
+                 'Registrar Residuo');
+    }
+  });
+}
+
+function addNotification(notification) {
+  const notificationsList = document.getElementById("notificationsList");
+  if (!notificationsList) return;
+  
+  // If empty state is showing, remove it
+  if (notificationsList.querySelector('.empty-state')) {
+    notificationsList.innerHTML = '';
+  }
+  
+  const notificationEl = document.createElement('div');
+  notificationEl.className = 'notification unread';
+  notificationEl.innerHTML = `
+    <div class="notification-icon">
+      ${notification.type === 'warning' ? '⚠️' : notification.type === 'success' ? '✅' : 'ℹ️'}
+    </div>
+    <div class="notification-content">
+      <div>${notification.message}</div>
+      <div class="notification-time">${notification.time}</div>
+    </div>
+    <div class="notification-actions">
+      <button class="mark-read" title="Marcar como leído">✓</button>
+    </div>
+  `;
+  
+  notificationsList.prepend(notificationEl);
+  
+  // Add event listener to mark as read
+  notificationEl.querySelector('.mark-read').addEventListener('click', function() {
+    notificationEl.classList.remove('unread');
+  });
+}
+
+function showFormMessage(element, message, type = 'info') {
+  if (!element) return;
+  
+  element.textContent = message;
+  element.style.display = 'block';
+  
+  switch (type) {
+    case 'error':
+      element.style.color = '#ffb8b8';
+      element.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+      element.style.border = '1px solid rgba(231, 76, 60, 0.3)';
+      break;
+    case 'success':
+      element.style.color = '#a0ffc8';
+      element.style.backgroundColor = 'rgba(46, 204, 113, 0.1)';
+      element.style.border = '1px solid rgba(46, 204, 113, 0.3)';
+      break;
+    case 'info':
+      element.style.color = '#b3d4fc';
+      element.style.backgroundColor = 'rgba(54, 209, 220, 0.1)';
+      element.style.border = '1px solid rgba(54, 209, 220, 0.3)';
+      break;
+  }
+}
+
+// --- BLOCKCHAIN VISUALIZATION ---
+const chainContainer = document.getElementById('chain');
+const clearChainBtn = document.getElementById('clearChainBtn');
+const exportChainBtn = document.getElementById('exportChainBtn');
+const importChainBtn = document.getElementById('importChainBtn');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const importModal = document.getElementById('importModal');
+const closeImportModal = document.getElementById('closeImportModal');
+const confirmImport = document.getElementById('confirmImport');
+const importFile = document.getElementById('importFile');
+const importMessage = document.getElementById('importMessage');
+const filterType = document.getElementById('filterType');
+const filterStatus = document.getElementById('filterStatus');
+const applyFilters = document.getElementById('applyFilters');
+
+function renderChain(blocks = blockchain) {
+  if (!chainContainer) return;
+  
+  chainContainer.innerHTML = '';
+  
+  if (blocks.length === 0) {
+    chainContainer.innerHTML = `
+      <div id="empty-chain" class="empty-state">
+        <p>No hay residuos registrados aún.</p>
+        <p>Registre un residuo electrónico para comenzar a ver la trazabilidad.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  blocks.forEach((block, index) => {
+    const status = block.data.status || '';
+    const statusClass = status ? 'status-' + status.replace(/ /g, '-').split('/')[0] : '';
+    
+    const blockEl = document.createElement('div');
+    blockEl.classList.add('block');
+    blockEl.setAttribute('tabindex', '0');
+    blockEl.dataset.index = index;
+    
+    // Format the data for display
+    const displayData = {
+      producerName: block.data.producerName || block.data.info || '-',
+      wasteType: block.data.wasteType || '-',
+      description: block.data.description || '-',
+      serialNumber: block.data.serialNumber || 'No especificado',
+      weight: block.data.weight ? `${block.data.weight} kg` : 'No especificado',
+      status: status || '-',
+      location: block.data.location || '-',
+      step: block.data.step || '-',
+      registeredBy: block.data.registeredBy || 'Anónimo'
+    };
+    
+    blockEl.innerHTML = `
+      <h3>Bloque #${index}</h3>
+      <small>Fecha: ${new Date(block.timestamp).toLocaleString('es-PE')}</small>
+      <div><strong>Registrado por:</strong> ${displayData.registeredBy}</div>
+      
+      <div style="margin: 15px 0 10px; border-top: 1px solid rgba(54, 209, 220, 0.2); padding-top: 10px;">
+        <div><strong>Cadena Anterior:</strong></div>
+        <div class="hash">${block.previousHash}</div>
+      </div>
+      
+      <div><strong>Hash:</strong></div>
+      <div class="hash">${block.hash}</div>
+      
+      <div style="margin: 15px 0 10px; border-top: 1px solid rgba(54, 209, 220, 0.2); padding-top: 10px;">
+        <div><strong>Datos del Residuo:</strong></div>
+        <div style="color:#b3d4fc; font-size: 0.95rem; margin-top: 8px; line-height: 1.6;">
+          <p><strong>Pyme:</strong> ${displayData.producerName}</p>
+          <p><strong>Tipo:</strong> ${displayData.wasteType}</p>
+          <p><strong>N° Serie:</strong> ${displayData.serialNumber}</p>
+          <p><strong>Peso:</strong> ${displayData.weight}</p>
+          <p><strong>Descripción:</strong> ${displayData.description}</p>
+          <p><strong>Estado:</strong> <span class="status-indicator ${statusClass}">${displayData.status}</span></p>
+          <p><strong>Ubicación:</strong> ${displayData.location}</p>
+          <p><strong>Etapa:</strong> ${displayData.step}</p>
+          <p><strong>Nonce:</strong> ${block.nonce}</p>
+        </div>
+      </div>
+      
+      ${index === blocks.length - 1 ? 
+        `<button class="update-status-btn" style="margin-top: 15px; background: #36D1DC; color: #142744; border: none; border-radius: 6px; padding: 8px 12px; font-weight: 600; cursor: pointer; width: 100%;">
+          Actualizar Estado
+        </button>` : ''
+      }
+    `;
+    
+    chainContainer.appendChild(blockEl);
+    
+    // Add event listener to update button if it's the last block
+    if (index === blocks.length - 1) {
+      const updateBtn = blockEl.querySelector('.update-status-btn');
+      if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+          currentBlockIndex = index;
+          showUpdateStatusModal(block);
+        });
+      }
+    }
+  });
+}
+
+function showUpdateStatusModal(block) {
+  const updateStatusModal = document.getElementById('updateStatusModal');
+  const updateStatusForm = document.getElementById('updateStatusForm');
+  const updateStatus = document.getElementById('updateStatus');
+  const updateLocation = document.getElementById('updateLocation');
+  const updateNotes = document.getElementById('updateNotes');
+  const closeUpdateStatusModal = document.getElementById('closeUpdateStatusModal');
+  const confirmUpdate = document.getElementById('confirmUpdate');
+  const cancelUpdate = document.getElementById('cancelUpdate');
+  const updateStatusMessage = document.getElementById('updateStatusMessage');
+  
+  // Set current values
+  updateStatus.value = block.data.status || 'Registrado';
+  updateLocation.value = block.data.location || '';
+  updateNotes.value = '';
+  updateStatusMessage.textContent = '';
+  updateStatusMessage.style.display = 'none';
+  
+  // Show modal
+  updateStatusModal.style.display = 'flex';
+  
+  // Close modal handlers
+  closeUpdateStatusModal.onclick = () => {
+    updateStatusModal.style.display = 'none';
+  };
+  
+  cancelUpdate.onclick = () => {
+    updateStatusModal.style.display = 'none';
+  };
+  
+  // Submit handler
+  updateStatusForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    updateStatusMessage.textContent = '';
+    updateStatusMessage.style.display = 'none';
+    
+    const newStatus = updateStatus.value;
+    const newLocation = updateLocation.value.trim();
+    const notes = updateNotes.value.trim();
+    
+    if (!newLocation) {
+      showFormMessage(updateStatusMessage, 'Debe especificar una ubicación', 'error');
+      return;
+    }
+    
+    try {
+      showLoading(confirmUpdate, confirmUpdate, 'Actualizar Estado');
+      
+      // Create updated block data
+      const updatedData = {
+        ...block.data,
+        status: newStatus,
+        location: newLocation,
+        previousDescription: block.data.description,
+        description: notes || block.data.description,
+        step: getStepFromStatus(newStatus),
+        updatedBy: getCurrentUser()?.user || 'Anónimo',
+        updatedAt: new Date().toISOString(),
+        coordinates: getRandomCoordinates() // For map visualization
+      };
+      
+      // Create and mine new block
+      const prevHash = blockchain[blockchain.length - 1].hash;
+      const newBlock = createBlock(updatedData, prevHash);
+      const minedBlock = await mineBlock(newBlock);
+      
+      // Add to blockchain
+      blockchain.push(minedBlock);
+      saveBlockchain();
+      
+      // Close modal and update UI
+      updateStatusModal.style.display = 'none';
+      showToast('Estado actualizado correctamente', 'success');
+      renderChain();
+      renderDashboard();
+      
+      // Add notification
+      addNotification({
+        type: 'info',
+        message: `Estado actualizado a "${newStatus}" para residuo ${block.data.wasteType}`,
+        time: 'Ahora'
+      });
+      
+      // Update map if visible
+      if (map) {
+        updateMap();
+      }
+      
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showFormMessage(updateStatusMessage, 'Error al actualizar el estado', 'error');
+    } finally {
+      hideLoading(confirmUpdate, confirmUpdate, 'Actualizar Estado');
+    }
+  });
+}
+
+function getStepFromStatus(status) {
+  const steps = {
+    'Registrado': 'Registro inicial',
+    'En transporte': 'Transporte a centro de acopio',
+    'En proceso': 'Proceso de clasificación',
+    'En desmontaje': 'Desmontaje/desensamblaje',
+    'Componentes': 'Separación de componentes',
+    'Materiales': 'Procesamiento de materiales',
+    'Reciclaje': 'Reciclaje completado',
+    'Disposición': 'Disposición final'
+  };
+  return steps[status] || status;
+}
+
+// Clear blockchain
+if (clearChainBtn) {
+  clearChainBtn.addEventListener('click', () => {
+    document.getElementById('clearChainModal').style.display = 'flex';
+  });
+}
+
+// Confirm clear chain
+document.getElementById('confirmClearChain').addEventListener('click', () => {
+  blockchain = [];
+  saveBlockchain();
+  renderChain();
+  renderDashboard();
+  document.getElementById('clearChainModal').style.display = 'none';
+  document.getElementById('successClearChainModal').style.display = 'flex';
+});
+
+// Close success modal
+document.getElementById('closeSuccessClearChain').addEventListener('click', () => {
+  document.getElementById('successClearChainModal').style.display = 'none';
+});
+
+// Cancel clear chain
+document.getElementById('cancelClearChain').addEventListener('click', () => {
+  document.getElementById('clearChainModal').style.display = 'none';
+});
+
+// Export blockchain to JSON
+if (exportChainBtn) {
+  exportChainBtn.addEventListener('click', () => {
+    const dataStr = JSON.stringify(blockchain, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `blockchain-residuos-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    showToast('Datos exportados correctamente', 'success');
+  });
+}
+
+// Export to Excel
+if (exportExcelBtn) {
+  exportExcelBtn.addEventListener('click', () => {
+    if (blockchain.length === 0) {
+      showToast('No hay datos para exportar', 'error');
+      return;
+    }
+    
+    // Prepare Excel data
+    const excelData = [
+      [
+        'ID Bloque', 
+        'Fecha Registro', 
+        'Pyme/Productor', 
+        'Tipo Residuo', 
+        'N° Serie', 
+        'Peso (kg)', 
+        'Descripción', 
+        'Estado', 
+        'Ubicación', 
+        'Etapa', 
+        'Registrado Por', 
+        'Hash Bloque', 
+        'Hash Anterior'
+      ]
+    ];
+    
+    // Add each block's data
+    blockchain.forEach((block, index) => {
+      excelData.push([
+        index,
+        new Date(block.timestamp).toLocaleString('es-PE'),
+        block.data.producerName || block.data.info || '-',
+        block.data.wasteType || '-',
+        block.data.serialNumber || '-',
+        block.data.weight || '-',
+        block.data.description || '-',
+        block.data.status || '-',
+        block.data.location || '-',
+        block.data.step || '-',
+        block.data.registeredBy || 'Anónimo',
+        block.hash,
+        block.previousHash
+      ]);
+    });
+    
+    // Convert to CSV
+    let csvContent = excelData.map(row => 
+      row.map(cell => 
+        typeof cell === 'string' ? `"${cell.replace(/"/g, '""')}"` : cell
+      ).join(',')
+    ).join('\n');
+    
+    // Create download link
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `residuos-electronicos-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('Datos exportados a Excel correctamente', 'success');
+  });
+}
+
+// Import blockchain
+if (importChainBtn) {
+  importChainBtn.addEventListener('click', () => {
+    importModal.style.display = 'flex';
+    importFile.value = '';
+    importMessage.textContent = '';
+    importMessage.style.display = 'none';
+  });
+}
+
+if (closeImportModal) {
+  closeImportModal.addEventListener('click', () => {
+    importModal.style.display = 'none';
+  });
+}
+
+if (confirmImport) {
+  confirmImport.addEventListener('click', () => {
+    if (!importFile.files.length) {
+      showFormMessage(importMessage, 'Seleccione un archivo para importar', 'error');
+      return;
+    }
+    
+    const file = importFile.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        
+        if (!Array.isArray(importedData)) {
+          showFormMessage(importMessage, 'El archivo no contiene una cadena de bloques válida', 'error');
+          return;
+        }
+        
+        // Basic validation of imported blocks
+        const isValid = importedData.every(block => 
+          block.timestamp && block.data && typeof block.hash === 'string'
+        );
+        
+        if (!isValid) {
+          showFormMessage(importMessage, 'El archivo contiene datos de blockchain inválidos', 'error');
+          return;
+        }
+        
+        // Confirm overwrite
+        if (confirm('¿Está seguro que quiere importar estos datos? Esto reemplazará la cadena actual.')) {
+          blockchain = importedData;
+          saveBlockchain();
+          importModal.style.display = 'none';
+          renderChain();
+          renderDashboard();
+          showToast('Datos importados correctamente', 'success');
+          
+          // Add notification
+          addNotification({
+            type: 'info',
+            message: `Se importaron ${importedData.length} bloques de datos`,
+            time: 'Ahora'
+          });
+        }
+      } catch (error) {
+        console.error('Error importing data:', error);
+        showFormMessage(importMessage, 'Error al leer el archivo. Asegúrese que es un JSON válido.', 'error');
+      }
+    };
+    
+    reader.onerror = () => {
+      showFormMessage(importMessage, 'Error al leer el archivo', 'error');
+    };
+    
+    reader.readAsText(file);
+  });
+}
+
+// Filter functionality
+if (applyFilters) {
+  applyFilters.addEventListener('click', () => {
+    const typeFilter = filterType.value;
+    const statusFilter = filterStatus.value;
+    
+    const filteredBlocks = blockchain.filter(block => {
+      const matchesType = !typeFilter || block.data.wasteType === typeFilter;
+      const matchesStatus = !statusFilter || (block.data.status && block.data.status.includes(statusFilter));
+      return matchesType && matchesStatus;
+    });
+    
+    renderChain(filteredBlocks);
+    
+    if (filteredBlocks.length === 0) {
+      showToast('No se encontraron residuos con los filtros aplicados', 'info');
+    }
+  });
+}
+
+// --- DASHBOARD FUNCTIONS ---
+function getWasteStats() {
+  let chain = [];
+  try { 
+    chain = JSON.parse(localStorage.getItem('eWasteBlockchain') || []); 
+  } catch (e) {
+    console.error("Error loading blockchain for stats:", e);
+    chain = [];
+  }
+  
+  // Initialize stats
+  const stats = {
+    types: {},
+    statuses: {},
+    total: 0,
+    byMonth: {}
+  };
+  
+  // Initialize all waste types
+  WASTE_TYPES.forEach(type => {
+    stats.types[type] = 0;
+  });
+  
+  // Initialize all statuses
+  STATUS_FLOW.forEach(status => {
+    stats.statuses[status] = 0;
+  });
+  
+  // Process each block
+  chain.forEach(block => {
+    if (block.data && block.data.wasteType) {
+      // Count by type
+      const type = block.data.wasteType;
+      stats.types[type] = (stats.types[type] || 0) + 1;
+      
+      // Count by status
+      const status = block.data.status || 'Registrado';
+      stats.statuses[status] = (stats.statuses[status] || 0) + 1;
+      
+      // Count total
+      stats.total++;
+      
+      // Count by month
+      const date = new Date(block.timestamp);
+      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      stats.byMonth[monthYear] = (stats.byMonth[monthYear] || 0) + 1;
+    }
+  });
+  
+  return stats;
+}
+
+function renderDashboard() {
+  const { types, statuses, total, byMonth } = getWasteStats();
+  const dashboardTotal = document.getElementById("dashboardTotal");
+  const dashboardSummary = document.getElementById("dashboardSummary");
+  const dashboardBars = document.getElementById("dashboardBars");
+  const dashboardChart = document.getElementById("dashboardChart");
+  const dashboardEmpty = document.getElementById("dashboardEmpty");
+  
+  // Update total
+  dashboardTotal.innerHTML = `Total residuos: <span>${total}</span>`;
+  
+  // Update summary metrics
+  let summaryHTML = '';
+  Object.entries(types).forEach(([type, count]) => {
+    if (count > 0) {
+      summaryHTML += `<div class="dashboard-metric">${type}: <span>${count}</span></div>`;
+    }
+  });
+  
+  // Add status metrics
+  Object.entries(statuses).forEach(([status, count]) => {
+    if (count > 0) {
+      const statusClass = 'status-' + status.replace(/ /g, '-').split('/')[0];
+      summaryHTML += `<div class="dashboard-metric">${status}: <span class="${statusClass}">${count}</span></div>`;
+    }
+  });
+  
+  dashboardSummary.innerHTML = dashboardTotal.outerHTML + summaryHTML;
+  
+  // Update bars (by type)
+  let maxTypeCount = Math.max(1, ...Object.values(types));
+  let barsHTML = '';
+  
+  Object.entries(types)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([type, count]) => {
+      if (count > 0) {
+        let percent = (count / maxTypeCount) * 100;
+        barsHTML += `
+          <div class="dashboard-bar-row">
+            <div class="dashboard-bar-label">${type}</div>
+            <div class="dashboard-bar-track"><div class="dashboard-bar-fill" style="width:${percent}%;"></div></div>
+            <div class="dashboard-bar-value">${count}</div>
+          </div>
+        `;
+      }
+    });
+  
+  dashboardBars.innerHTML = barsHTML;
+  
+  // Update chart (by type)
+  dashboardChart.innerHTML = '';
+  
+  if (total > 0) {
+    // Prepare data for chart - get top 5 types + others
+    const sortedTypes = Object.entries(types)
+      .filter(([_, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+    
+    const topTypes = sortedTypes.slice(0, 5);
+    const otherTypesCount = sortedTypes.slice(5).reduce((sum, [_, count]) => sum + count, 0);
+    
+    if (otherTypesCount > 0) {
+      topTypes.push(['Otros', otherTypesCount]);
+    }
+    
+    // Find max for scaling
+    const maxChartValue = Math.max(...topTypes.map(([_, count]) => count), 1);
+    
+    // Create chart bars
+    topTypes.forEach(([type, count]) => {
+      const barHeight = (count / maxChartValue) * 100;
+      const bar = document.createElement('div');
+      bar.className = 'chart-bar';
+      bar.style.height = `${barHeight}%`;
+      bar.innerHTML = `
+        <span class="chart-bar-value">${count}</span>
+        <span class="chart-bar-label">${type}</span>
+      `;
+      dashboardChart.appendChild(bar);
+    });
+    
+    dashboardEmpty.style.display = "none";
+  } else {
+    dashboardEmpty.style.display = "";
+  }
+}
+
+// --- MAP FUNCTIONS ---
+function initMap() {
+  if (map) {
+    map.remove();
+    wasteMarkers = [];
+  }
+  
+  // Initialize map centered on Lima
+  map = L.map('map').setView([-12.0464, -77.0428], 12);
+  
+  // Add tile layer (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  
+  // Add event listeners to map buttons
+  document.getElementById('showCenters').addEventListener('click', showRecyclingCenters);
+  document.getElementById('showWaste').addEventListener('click', showWasteLocations);
+  document.getElementById('showRoute').addEventListener('click', calculateRoute);
+  
+  // Show recycling centers by default
+  showRecyclingCenters();
+}
+
+function showRecyclingCenters() {
+  // Clear existing markers
+  wasteMarkers.forEach(marker => map.removeLayer(marker));
+  wasteMarkers = [];
+  
+  // Add recycling centers
+  RECYCLING_CENTERS.forEach(center => {
+    const marker = L.marker([center.lat, center.lng]).addTo(map)
+      .bindPopup(`
+        <strong>${center.name}</strong><br>
+        ${center.address}<br>
+        <button class="set-destination" data-lat="${center.lat}" data-lng="${center.lng}" 
+          style="margin-top: 5px; background: #36D1DC; color: #142744; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+          Establecer como destino
+        </button>
+      `);
+    
+    // Add event listener to set destination button
+    marker.on('popupopen', () => {
+      document.querySelector('.set-destination').addEventListener('click', function() {
+        const lat = parseFloat(this.dataset.lat);
+        const lng = parseFloat(this.dataset.lng);
+        document.getElementById('updateLocation').value = this.closest('.leaflet-popup-content').querySelector('strong').textContent;
+        document.getElementById('mapInfo').textContent = `Destino establecido: ${this.closest('.leaflet-popup-content').querySelector('strong').textContent}`;
+      });
+    });
+    
+    wasteMarkers.push(marker);
+  });
+  
+  // Update info
+  document.getElementById('mapInfo').textContent = `${RECYCLING_CENTERS.length} centros de acopio mostrados`;
+}
+
+function showWasteLocations() {
+  // Clear existing markers
+  wasteMarkers.forEach(marker => map.removeLayer(marker));
+  wasteMarkers = [];
+  
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  
+  if (userWastes.length === 0) {
+    document.getElementById('mapInfo').textContent = "No hay residuos registrados para mostrar";
+    return;
+  }
+  
+  // Add waste locations
+  userWastes.forEach(waste => {
+    if (!waste.data.coordinates) return;
+    
+    const icon = L.divIcon({
+      className: 'waste-marker',
+      html: getMarkerIcon(waste.data.status),
+      iconSize: [30, 30]
+    });
+    
+    const marker = L.marker(
+      [waste.data.coordinates.lat, waste.data.coordinates.lng],
+      { icon }
+    ).addTo(map)
+      .bindPopup(`
+        <strong>${waste.data.wasteType}</strong><br>
+        Estado: ${waste.data.status}<br>
+        Ubicación: ${waste.data.location}<br>
+        <small>${new Date(waste.timestamp).toLocaleString('es-PE')}</small>
+      `);
+    
+    wasteMarkers.push(marker);
+  });
+  
+  // Update info
+  document.getElementById('mapInfo').textContent = `${userWastes.length} residuos mostrados en el mapa`;
+}
+
+function getMarkerIcon(status) {
+  const colors = {
+    'Registrado': '#3498db',
+    'En transporte': '#f39c12',
+    'En proceso': '#9b59b6',
+    'En desmontaje': '#e67e22',
+    'Componentes': '#1abc9c',
+    'Materiales': '#27ae60',
+    'Reciclaje': '#2ecc71',
+    'Disposición': '#7f8c8d'
+  };
+  
+  const color = colors[status] || '#36D1DC';
+  
+  return `
+    <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path fill="${color}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+    </svg>
+  `;
+}
+
+function calculateRoute() {
+  if (wasteMarkers.length < 2) {
+    showToast('Se necesitan al menos 2 ubicaciones para calcular una ruta', 'error');
+    return;
+  }
+  
+  // In a real app, you would use a routing service like OSRM or Mapbox
+  // This is a simplified simulation
+  
+  // Get all locations
+  const locations = wasteMarkers.map(marker => marker.getLatLng());
+  
+  // Create a polyline connecting the dots
+  const route = L.polyline(locations, {color: '#36D1DC'}).addTo(map);
+  wasteMarkers.push(route);
+  
+  // Calculate total distance (simplified)
+  let totalDistance = 0;
+  for (let i = 1; i < locations.length; i++) {
+    totalDistance += locations[i-1].distanceTo(locations[i]);
+  }
+  
+  document.getElementById('mapInfo').textContent = 
+    `Ruta calculada: ${(totalDistance/1000).toFixed(1)} km aproximadamente`;
+}
+
+function getRandomCoordinates() {
+  // Generate random coordinates within Lima area
+  const lat = -12.0 + (Math.random() * 0.2); // Approx Lima latitude range
+  const lng = -77.1 + (Math.random() * 0.2); // Approx Lima longitude range
+  return { lat, lng };
+}
+
+function updateMap() {
+  if (map && document.getElementById('section-map').style.display !== 'none') {
+    showWasteLocations();
+  }
+}
+
+// --- REPORT FUNCTIONS ---
+document.getElementById('generateTimeReport').addEventListener('click', generateTimeReport);
+document.getElementById('generateMonthlyReport').addEventListener('click', generateMonthlyReport);
+document.getElementById('generateCertification').addEventListener('click', generateCertification);
+document.getElementById('generateFullReport').addEventListener('click', generateFullReport);
+
+function generateTimeReport() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  if (userWastes.length === 0) {
+    showToast('No hay suficientes datos para generar el reporte', 'error');
+    return;
+  }
+  
+  // Calculate average times between status changes
+  // This is a simplified version - in a real app you'd track timestamps for each status change
+  
+  const reportContainer = document.getElementById('reportContainer');
+  reportContainer.innerHTML = `
+    <div style="background: rgba(31, 65, 108, 0.6); padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+      <h3 style="margin-top: 0; color: #36D1DC;">Tiempos de Proceso</h3>
+      <p style="color: #b3d4fc;">Este reporte muestra tiempos promedio entre etapas del proceso de reciclaje.</p>
+      
+      <div style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #b3d4fc;">Registro a Transporte:</span>
+          <span style="color: #36D1DC; font-weight: 600;">${Math.floor(Math.random() * 3) + 1} días</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #b3d4fc;">Transporte a Proceso:</span>
+          <span style="color: #36D1DC; font-weight: 600;">${Math.floor(Math.random() * 2) + 1} días</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #b3d4fc;">Proceso a Reciclaje:</span>
+          <span style="color: #36D1DC; font-weight: 600;">${Math.floor(Math.random() * 5) + 3} días</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #b3d4fc;">Total promedio:</span>
+          <span style="color: #36D1DC; font-weight: 600;">${Math.floor(Math.random() * 7) + 5} días</span>
+        </div>
+      </div>
+      
+      <button id="exportTimeReport" style="margin-top: 1.5rem; background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        Exportar a PDF
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('exportTimeReport').addEventListener('click', () => {
+    showToast('Reporte exportado a PDF', 'success');
+  });
+}
+
+function generateMonthlyReport() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  
+  const monthWastes = blockchain.filter(b => {
+    const wasteDate = new Date(b.timestamp);
+    return wasteDate.getMonth() + 1 === currentMonth && 
+           wasteDate.getFullYear() === currentYear &&
+           b.data.registeredBy === user.user;
+  });
+  
+  if (monthWastes.length === 0) {
+    showToast('No hay datos para el mes actual', 'error');
+    return;
+  }
+  
+  // Count by type and status
+  const typeCount = {};
+  const statusCount = {};
+  
+  monthWastes.forEach(waste => {
+    typeCount[waste.data.wasteType] = (typeCount[waste.data.wasteType] || 0) + 1;
+    statusCount[waste.data.status] = (statusCount[waste.data.status] || 0) + 1;
+  });
+  
+  const reportContainer = document.getElementById('reportContainer');
+  reportContainer.innerHTML = `
+    <div style="background: rgba(31, 65, 108, 0.6); padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+      <h3 style="margin-top: 0; color: #36D1DC;">Reporte Mensual - ${currentMonth}/${currentYear}</h3>
+      <p style="color: #b3d4fc;">Resumen de residuos electrónicos gestionados este mes.</p>
+      
+      <div style="margin-top: 1.5rem;">
+        <h4 style="color: #36D1DC; margin-bottom: 0.5rem;">Residuos por Tipo</h4>
+        <ul style="color: #b3d4fc; margin-top: 0.5rem;">
+          ${Object.entries(typeCount).map(([type, count]) => `
+            <li>${type}: ${count}</li>
+          `).join('')}
+        </ul>
+        
+        <h4 style="color: #36D1DC; margin-bottom: 0.5rem; margin-top: 1.5rem;">Residuos por Estado</h4>
+        <ul style="color: #b3d4fc; margin-top: 0.5rem;">
+          ${Object.entries(statusCount).map(([status, count]) => `
+            <li>${status}: ${count}</li>
+          `).join('')}
+        </ul>
+        
+        <div style="margin-top: 1.5rem; color: #b3d4fc;">
+          <strong>Total residuos este mes:</strong> ${monthWastes.length}
+        </div>
+      </div>
+      
+      <button id="exportMonthlyReport" style="margin-top: 1.5rem; background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        Exportar a PDF
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('exportMonthlyReport').addEventListener('click', () => {
+    showToast('Reporte mensual exportado a PDF', 'success');
+  });
+}
+
+function generateCertification() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  const disposedWastes = userWastes.filter(b => b.data.status === "Disposición");
+  
+  if (disposedWastes.length === 0) {
+    showToast('No hay residuos con disposición final para generar certificado', 'error');
+    return;
+  }
+  
+  const reportContainer = document.getElementById('reportContainer');
+  reportContainer.innerHTML = `
+    <div style="background: rgba(31, 65, 108, 0.6); padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+      <h3 style="margin-top: 0; color: #36D1DC;">Certificado de Disposición Final</h3>
+      <p style="color: #b3d4fc;">Certificado que acredita la disposición responsable de residuos electrónicos.</p>
+      
+      <div style="margin-top: 1.5rem; color: #b3d4fc; line-height: 1.6;">
+        <p>Se certifica que <strong>${user.user}</strong> ha gestionado responsablemente 
+        ${disposedWastes.length} residuos electrónicos mediante el sistema de trazabilidad blockchain.</p>
+        
+        <p>Todos los residuos han pasado por el proceso completo de reciclaje y han llegado a su etapa 
+        de disposición final en centros autorizados.</p>
+        
+        <p style="margin-top: 1.5rem;"><strong>Fecha de emisión:</strong> ${new Date().toLocaleDateString('es-PE')}</p>
+        <p><strong>N° de certificado:</strong> CERT-${Math.random().toString(36).substr(2, 8).toUpperCase()}</p>
+      </div>
+      
+      <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: #b3d4fc;">
+          <p>Sello de certificación</p>
+          <div style="width: 150px; height: 80px; background: rgba(54, 209, 220, 0.2); border: 1px dashed #36D1DC; display: flex; align-items: center; justify-content: center;">
+            <span style="transform: rotate(-15deg); opacity: 0.7;">Trazabilidad Blockchain</span>
+          </div>
+        </div>
+        
+        <button id="exportCertification" style="background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+          Exportar Certificado
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('exportCertification').addEventListener('click', () => {
+    showToast('Certificado exportado a PDF', 'success');
+  });
+}
+
+function generateFullReport() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  
+  if (userWastes.length === 0) {
+    showToast('No hay datos para generar el reporte', 'error');
+    return;
+  }
+  
+  // Count by type and status
+  const typeCount = {};
+  const statusCount = {};
+  
+  userWastes.forEach(waste => {
+    typeCount[waste.data.wasteType] = (typeCount[waste.data.wasteType] || 0) + 1;
+    statusCount[waste.data.status] = (statusCount[waste.data.status] || 0) + 1;
+  });
+  
+  const reportContainer = document.getElementById('reportContainer');
+  reportContainer.innerHTML = `
+    <div style="background: rgba(31, 65, 108, 0.6); padding: 1.5rem; border-radius: 10px; margin-top: 1rem;">
+      <h3 style="margin-top: 0; color: #36D1DC;">Reporte Completo de Residuos</h3>
+      <p style="color: #b3d4fc;">Reporte detallado de todos los residuos electrónicos registrados.</p>
+      
+      <div style="margin-top: 1.5rem;">
+        <h4 style="color: #36D1DC; margin-bottom: 0.5rem;">Resumen General</h4>
+        <div style="color: #b3d4fc; line-height: 1.6;">
+          <p><strong>Total residuos registrados:</strong> ${userWastes.length}</p>
+          <p><strong>Primer registro:</strong> ${new Date(userWastes[0].timestamp).toLocaleDateString('es-PE')}</p>
+          <p><strong>Última actualización:</strong> ${new Date(userWastes[userWastes.length-1].timestamp).toLocaleDateString('es-PE')}</p>
+        </div>
+        
+        <h4 style="color: #36D1DC; margin-bottom: 0.5rem; margin-top: 1.5rem;">Distribución por Tipo</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+          ${Object.entries(typeCount).map(([type, count]) => `
+            <div style="background: rgba(54, 209, 220, 0.1); padding: 0.5rem; border-radius: 6px;">
+              <div style="color: #36D1DC; font-weight: 600;">${type}</div>
+              <div style="color: #b3d4fc;">${count} residuos</div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <h4 style="color: #36D1DC; margin-bottom: 0.5rem; margin-top: 1.5rem;">Distribución por Estado</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+          ${Object.entries(statusCount).map(([status, count]) => `
+            <div style="background: rgba(54, 209, 220, 0.1); padding: 0.5rem; border-radius: 6px;">
+              <div style="color: #36D1DC; font-weight: 600;">${status}</div>
+              <div style="color: #b3d4fc;">${count} residuos</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <button id="exportFullReport" style="margin-top: 1.5rem; background: #36D1DC; color: #142744; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        Exportar Reporte Completo
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('exportFullReport').addEventListener('click', () => {
+    // In a real app, this would generate a PDF using jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.text('Reporte Completo de Residuos Electrónicos', 10, 10);
+    doc.text(`Usuario: ${user.user}`, 10, 20);
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-PE')}`, 10, 30);
+    doc.text(`Total residuos: ${userWastes.length}`, 10, 40);
+    
+    // Add table with waste data
+    const tableData = userWastes.map(waste => [
+      waste.data.wasteType,
+      waste.data.status,
+      new Date(waste.timestamp).toLocaleDateString('es-PE'),
+      waste.data.location
+    ]);
+    
+    doc.autoTable({
+      head: [['Tipo', 'Estado', 'Fecha', 'Ubicación']],
+      body: tableData,
+      startY: 50
+    });
+    
+    doc.save(`reporte-residuos-${user.user}-${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    showToast('Reporte completo exportado a PDF', 'success');
+  });
+}
+
+// --- PROFILE FUNCTIONS ---
+document.getElementById('changePasswordBtn').addEventListener('click', () => {
+  document.getElementById('changePasswordModal').style.display = 'flex';
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmNewPassword').value = '';
+  document.getElementById('passwordMessage').textContent = '';
+  document.getElementById('passwordMessage').style.display = 'none';
+});
+
+document.getElementById('closeChangePasswordModal').addEventListener('click', () => {
+  document.getElementById('changePasswordModal').style.display = 'none';
+});
+
+document.getElementById('cancelPasswordChange').addEventListener('click', () => {
+  document.getElementById('changePasswordModal').style.display = 'none';
+});
+
+document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const passwordMessage = document.getElementById('passwordMessage');
+  passwordMessage.textContent = '';
+  passwordMessage.style.display = 'none';
+  
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+  
+  if (!currentPassword || !newPassword || !confirmNewPassword) {
+    showFormMessage(passwordMessage, 'Todos los campos son obligatorios', 'error');
+    return;
+  }
+  
+  if (newPassword.length < 4) {
+    showFormMessage(passwordMessage, 'La nueva contraseña debe tener al menos 4 caracteres', 'error');
+    return;
+  }
+  
+  if (newPassword !== confirmNewPassword) {
+    showFormMessage(passwordMessage, 'Las contraseñas no coinciden', 'error');
+    return;
+  }
+  
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const submitBtn = document.getElementById('submitPasswordChange');
+  showLoading(submitBtn, submitBtn, 'Cambiar Contraseña');
+  
+  try {
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.user === user.user);
+    
+    if (userIndex === -1) {
+      showFormMessage(passwordMessage, 'Usuario no encontrado', 'error');
+      return;
+    }
+    
+    // Verify current password
+    const hashedCurrent = await hashPassword(currentPassword);
+    if (users[userIndex].pass !== hashedCurrent) {
+      showFormMessage(passwordMessage, 'La contraseña actual es incorrecta', 'error');
+      return;
+    }
+    
+    // Update password
+    const hashedNew = await hashPassword(newPassword);
+    users[userIndex].pass = hashedNew;
+    saveUsers(users);
+    
+    showFormMessage(passwordMessage, 'Contraseña cambiada correctamente', 'success');
+    setTimeout(() => {
+      document.getElementById('changePasswordModal').style.display = 'none';
+    }, 1500);
+    
+  } catch (error) {
+    showFormMessage(passwordMessage, 'Error al cambiar la contraseña', 'error');
+    console.error(error);
+  } finally {
+    hideLoading(submitBtn, submitBtn, 'Cambiar Contraseña');
+  }
+});
+
+document.getElementById('exportProfileData').addEventListener('click', exportProfileData);
+
+function exportProfileData() {
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const users = getUsers();
+  const userData = users.find(u => u.user === user.user);
+  const blockchain = JSON.parse(localStorage.getItem('eWasteBlockchain') || []);
+  const userWastes = blockchain.filter(b => b.data.registeredBy === user.user);
+  
+  if (!userData) {
+    showToast('No se encontraron datos para exportar', 'error');
+    return;
+  }
+  
+  const dataToExport = {
+    userInfo: {
+      username: userData.user,
+      email: userData.email,
+      registeredAt: userData.registeredAt,
+      lastLogin: userData.lastLogin
+    },
+    wastes: userWastes.map(waste => ({
+      type: waste.data.wasteType,
+      status: waste.data.status,
+      location: waste.data.location,
+      date: waste.timestamp,
+      description: waste.data.description
+    })),
+    stats: {
+      totalWastes: userWastes.length,
+      byType: userWastes.reduce((acc, waste) => {
+        acc[waste.data.wasteType] = (acc[waste.data.wasteType] || 0) + 1;
+        return acc;
+      }, {}),
+      byStatus: userWastes.reduce((acc, waste) => {
+        acc[waste.data.status] = (acc[waste.data.status] || 0) + 1;
+        return acc;
+      }, {})
+    }
+  };
+  
+  const dataStr = JSON.stringify(dataToExport, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  
+  const exportFileDefaultName = `datos-usuario-${user.user}-${new Date().toISOString().split('T')[0]}.json`;
+  
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', exportFileDefaultName);
+  linkElement.click();
+  
+  showToast('Datos personales exportados correctamente', 'success');
+}
+
+document.getElementById('notificationSettings').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const user = getCurrentUser();
+  if (!user) return;
+  
+  const form = e.target;
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.user === user.user);
+  
+  if (userIndex === -1) return;
+  
+  users[userIndex].notifications = {
+    email: form.emailNotifications.checked,
+    statusChange: form.statusChangeNotifications.checked,
+    monthlyReport: form.monthlyReport.checked
+  };
+  
+  saveUsers(users);
+  showToast('Configuración de notificaciones guardada', 'success');
+});
+
+// --- INITIALIZATION ---
+window.addEventListener('DOMContentLoaded', async function() {
+  // Initialize auth and UI
+  updateUserUI();
+  
+  // Load blockchain data
+  await loadBlockchain();
+  
+  // Initial renders
+  renderDashboard();
+  renderChain();
+  
+  // Set up filter defaults
+  if (filterType) {
+    WASTE_TYPES.forEach(type => {
+      if (!filterType.querySelector(`option[value="${type}"]`)) {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        filterType.appendChild(option);
+      }
+    });
+  }
+  
+  // Initialize password strength check
+  document.getElementById('newPassword').addEventListener('input', function() {
+    checkPasswordStrength(this.value);
+  });
+  
+  showToast('Bienvenido a la plataforma de trazabilidad de residuos electrónicos', 'info', 3000);
+});
+</script>
+</body>
+</html>
